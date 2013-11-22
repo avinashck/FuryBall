@@ -18,13 +18,14 @@ import android.view.SurfaceView;
 import android.view.Window;
 import android.view.WindowManager;
 
-public class GameActivity extends Activity implements SensorEventListener{
+public class GameActivity extends Activity /*implements SensorEventListener*/{
 	
-	Bitmap back,paddle;
+	//Bitmap back,paddle;
 	SensorManager sm;
 	GameView gView;
-	float x,xLast,sensorX,sensorY,sensorZ;
-	private final float NOISE=(float)10.0;
+	//public Sprite sprite;
+	float sensorX,sensorY,sensorZ;
+	//private final float NOISE=(float)10.0;
 		
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -34,17 +35,18 @@ public class GameActivity extends Activity implements SensorEventListener{
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		setContentView(gView);
-		sm=(SensorManager)getSystemService(Context.SENSOR_SERVICE);
+		//sprite=new Sprite();
+		/*sm=(SensorManager)getSystemService(Context.SENSOR_SERVICE);
 		if(sm.getSensorList(Sensor.TYPE_ACCELEROMETER).size()!=0){
 			Sensor s=sm.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
-			sm.registerListener(this, s, SensorManager.SENSOR_DELAY_NORMAL);
-		}
-		paddle=BitmapFactory.decodeResource(getResources(),R.drawable.bar);
-		gView.resume();	
-		x=xLast=sensorX=sensorY=sensorZ=0;
+			sm.registerListener(gView.sprite, s, SensorManager.SENSOR_DELAY_NORMAL);
+		}*/
+		//paddle=BitmapFactory.decodeResource(getResources(),R.drawable.bar);
+		//gView.resume();		
+		sensorX=sensorY=sensorZ=0;
 	}
 	
-	public class GameView extends SurfaceView implements Runnable{
+	/*public class GameView extends SurfaceView implements Runnable{
 		
 		Thread ourThread=null;
 		boolean isRunning=true;
@@ -60,11 +62,11 @@ public class GameActivity extends Activity implements SensorEventListener{
 			ourHolder=getHolder();
 		}
 	
-		/*public void setMyBackground(){
+		public void setMyBackground(){
 			back=BitmapFactory.decodeResource(getResources(),R.drawable.my_theme);
 			Drawable d = new BitmapDrawable(getResources(),back);
 			gView.setBackgroundDrawable(d);
-		}*/
+		}
 		
 		public void pause(){
 			isRunning=false;
@@ -114,14 +116,14 @@ public class GameActivity extends Activity implements SensorEventListener{
 			}
 						
 		}
-	}
+	}*/
 
-	@Override
+	/*@Override
 	public void onAccuracyChanged(Sensor arg0, int arg1) {
 				
-	}
+	}*/
 
-	@Override
+	/*@Override
 	public void onSensorChanged(SensorEvent event) {
 		
 		try {
@@ -133,11 +135,12 @@ public class GameActivity extends Activity implements SensorEventListener{
 		sensorX=event.values[0];
 		sensorY=event.values[1];
 		sensorZ=event.values[2];
-	}
+		//sSprite.assign(sensorX, sensorY, sensorZ);
+	}*/
 	
 	@Override
 	protected void onPause(){
-		sm.unregisterListener(this);
+		//sm.unregisterListener(gView.sprite);
 		super.onPause();
 	}
 	
