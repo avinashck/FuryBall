@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
@@ -23,8 +24,10 @@ public class GameActivity extends Activity implements SensorEventListener{
 	Bitmap back,paddle;
 	SensorManager sm;
 	GameView gView;
-	float x,xLast,sensorX,sensorY,sensorZ;
-	private final float NOISE=(float)10.0;
+	int xAxis,xLast;
+	float x,sensorX,sensorY,sensorZ,yAxis;
+	private float collisionPoint,hitPercent;
+	private final float NOISE=(float)6.0;
 		
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -41,23 +44,75 @@ public class GameActivity extends Activity implements SensorEventListener{
 		}
 		paddle=BitmapFactory.decodeResource(getResources(),R.drawable.bar);
 		gView.resume();	
-		x=xLast=sensorX=sensorY=sensorZ=0;
+		xAxis=xLast=0;
+		x=sensorX=sensorY=sensorZ=yAxis=0;
 	}
 	
 	public class GameView extends SurfaceView implements Runnable{
 		
 		Thread ourThread=null;
 		boolean isRunning=true;
-		private int screenW;
-		private int screenH;
-		SurfaceHolder ourHolder;	
+		private int screenW,ballWidth;
+		private int screenH,ballHeight;
+		SurfaceHolder ourHolder;
+		Bitmap ball,ballAnime,ball2;
+		private static final int NO_COLUMNS = 12;
+		private int speedX,speedY,ballX,ballY;
+		private int currentFrame=0;
 		
 		public GameView(Context context) {
 			super(context);
+			ourHolder=getHolder();
 			back=BitmapFactory.decodeResource(getResources(),R.drawable.my_theme);
 			//Drawable d = new BitmapDrawable(getResources(),back);
 			//this.setBackgroundDrawable(d);
-			ourHolder=getHolder();
+			ball=BitmapFactory.decodeResource(getResources(),R.drawable.ball_animation);
+			//ball2=BitmapFactory.decodeResource(getResources(),R.drawable.ball);
+			//ballAnime=Bitmap.createScaledBitmap(ball, (int)(Math.ceil(((float)ball.getWidth())/NO_COLUMNS))*NO_COLUMNS, ball.getHeight(), true);
+			ballWidth=ball.getWidth()/NO_COLUMNS;
+			ballHeight=ball.getHeight();
+			ballX=75;
+			ballY=75;
+			speedX=10;
+			speedY=10;
+		}
+		
+		public void update(){
+			//code for paddle movement
+			x=(float) (((screenW-paddle.getWidth())/1.5)-sensorX*50);
+			xAxis=(int) (((screenW-paddle.getWidth())/2)-sensorX*50);
+			yAxis=(int)(screenH*0.8);
+			if(xAxis<paddle.getWidth()/2){
+				xAxis=0;
+			}
+			if(xAxis>screenW-paddle.getWidth()){
+				xAxis=screenW-paddle.getWidth();
+			}
+			
+			//code for ball movement
+			//ballX=screenH-paddle.getHeight();
+			if(ballX>=screenW-ballWidth || ballX<=0){
+				speedX=-speedX;
+			}
+			if(ballY>=screenH-ballHeight || ballY<=0){
+				speedY=-speedY;
+			}
+			
+			//code for paddle and ball collision
+			if(ballY+ballHeight >= yAxis-(paddle.getHeight())/3) {
+				
+				if((ballX+ballWidth>x-paddle.getWidth()/2 && x>ballX) ||  (ballX<=x+paddle.getWidth()/2 && ballX>x)) {
+					collisionPoint=ballX-x;
+					hitPercent=(float) ((collisionPoint/((paddle.getWidth()/2)-ballWidth))-0.1);
+					speedX=(int) (hitPercent*10);
+					speedY=-speedY;
+				}
+			}
+			
+			ballX=ballX+speedX;
+			ballY=ballY+speedY;
+			
+			currentFrame=++currentFrame%NO_COLUMNS;
 		}
 	
 		/*public void setMyBackground(){
@@ -95,24 +150,31 @@ public class GameActivity extends Activity implements SensorEventListener{
 	
 		@Override
 		public void run() {
-			//back=BitmapFactory.decodeResource(getResources(),R.drawable.my_theme);
-			//Drawable d = new BitmapDrawable(getResources(),back);
 						
 			while(isRunning){
 				
+				//update();
 				if(!ourHolder.getSurface().isValid())
 					continue;
 				Canvas canvas=ourHolder.lockCanvas();
-				x=((screenW-paddle.getWidth())/2);
-				float deltaX=Math.abs(xLast-sensorX);
+				//x=((screenW-paddle.getWidth())/2);
 				//sensorX*100
 				canvas.drawColor(Color.BLACK);
-				if(deltaX<NOISE){
-					canvas.drawBitmap(paddle,x-sensorX*50, (int)(screenH*0.8), null);
+				int scrX=currentFrame*ballWidth;
+				int scrY=0;
+				Rect scr=new Rect(scrX,scrY,scrX+ballWidth,scrY+ballHeight);
+				Rect dest=new Rect(ballX,ballY,ballX+ballWidth,ballY+ballHeight);
+				canvas.drawBitmap(ball,scr, dest, null);
+				int deltaX=xLast-xAxis;//Math.abs(xLast-xAxis);
+				if(deltaX>NOISE){
+					canvas.drawBitmap(paddle,xAxis, yAxis, null);
+				}else{
+					canvas.drawBitmap(paddle,xLast, yAxis, null);
 				}
+				update();
+				xLast=xAxis;
 				ourHolder.unlockCanvasAndPost(canvas);
-			}
-						
+			}						
 		}
 	}
 
