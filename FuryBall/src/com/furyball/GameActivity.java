@@ -55,32 +55,100 @@ public class GameActivity extends Activity implements SensorEventListener{
 		private int screenW,ballWidth;
 		private int screenH,ballHeight;
 		SurfaceHolder ourHolder;
-		Bitmap ball,ballAnime,ball2;
+		Bitmap ball,ballAnime,ball2,brick;
 		private static final int NO_COLUMNS = 12;
 		private int speedX,speedY,ballX,ballY;
 		private int currentFrame=0;
+		Drawable d;
+		//int level=1;
+		int[][] levelCode={{1,1,1,1,1,1,1,1,1,1,1},};
+		int[][] levelArray=levelCode;
+		//int[][] levelCode;
+		//int[][] levelArray;
+		int currentLvl=1;
+		int brickX=0,brickY=0;
+		int brickH,brickW,no_brickperline;
 		
 		public GameView(Context context) {
 			super(context);
 			ourHolder=getHolder();
 			back=BitmapFactory.decodeResource(getResources(),R.drawable.my_theme);
-			//Drawable d = new BitmapDrawable(getResources(),back);
+			d = new BitmapDrawable(getResources(),back);
 			//this.setBackgroundDrawable(d);
 			ball=BitmapFactory.decodeResource(getResources(),R.drawable.ball_animation);
+			brick=BitmapFactory.decodeResource(getResources(),R.drawable.brick);
 			//ball2=BitmapFactory.decodeResource(getResources(),R.drawable.ball);
 			//ballAnime=Bitmap.createScaledBitmap(ball, (int)(Math.ceil(((float)ball.getWidth())/NO_COLUMNS))*NO_COLUMNS, ball.getHeight(), true);
 			ballWidth=ball.getWidth()/NO_COLUMNS;
 			ballHeight=ball.getHeight();
-			ballX=75;
-			ballY=75;
+			
+			brickH=brick.getHeight();
+			brickW=brick.getWidth();
+			/*no_brickperline=this.getWidth()/brick.getWidth()-2;
+			levelCode=new int[no_brickperline][currentLvl];
+			levelArray=levelCode;
+			for (int i = 0; i < no_brickperline; ++i){
+				for (int j = 0; j < 4; ++j){
+					levelArray[i][j] = 1;
+				}
+			}*/
+				
+			
+			ballX=20;
+			ballY=120;
 			speedX=10;
 			speedY=10;
 		}
 		
-		public void update(){
+		public void update(Canvas canvas){
+			
+			//code for bricks
+			int arrayLenght=levelArray[currentLvl-1].length;
+			int brickRow=brick.getWidth();
+			for(int i=0;i<arrayLenght;i++){
+				if(levelArray[currentLvl-1][i]==1){
+					brickX=5+(i*brickRow);
+					brickY=100;
+				}
+				canvas.drawBitmap(brick, brickX, brickY, null);
+			}
+			
+			//code for brick collision
+			if(ballY+ballHeight>=brickH){
+				if(ballX+ballWidth>brickW){
+				//	levelArray[0][]=0;
+					speedY=-speedY;
+				}
+			}
+			/*if(ballY>0 && ballY<=(5*brickH) && currentLvl==1){
+				if(ballX!=0){
+					int x1=ballX;
+					int y1=ballY;
+					if(x1>(no_brickperline+1)*brickW){
+						x1=(no_brickperline)*brickW;
+					}
+					if(x1<=brickW){
+						x1=brickW;
+					}
+					if(y1<=brickH){
+						y1=brickH;
+					}
+					if(y1>=(4*brickH) && y1<=(5*brickH)){
+						y1=4*brickH;
+					}
+					int posi=(int)Math.floor(x1/brickW)-1;
+					int posj=(int)Math.floor(y1/brickH)-1;
+					if(levelArray[posi][posj]==1){
+						levelArray[posi][posj]=0;
+							speedY=-speedY;
+					}	
+				}
+			}*/
+			
+			
 			//code for paddle movement
-			x=(float) (((screenW-paddle.getWidth())/1.5)-sensorX*50);
-			xAxis=(int) (((screenW-paddle.getWidth())/2)-sensorX*50);
+			x=(float) (((screenW-paddle.getWidth())/1.5)-sensorX*80);
+			xAxis=(int) (((screenW-paddle.getWidth())/2)-sensorX*80);
 			yAxis=(int)(screenH*0.8);
 			if(xAxis<paddle.getWidth()/2){
 				xAxis=0;
@@ -90,7 +158,6 @@ public class GameActivity extends Activity implements SensorEventListener{
 			}
 			
 			//code for ball movement
-			//ballX=screenH-paddle.getHeight();
 			if(ballX>=screenW-ballWidth || ballX<=0){
 				speedX=-speedX;
 			}
@@ -99,7 +166,7 @@ public class GameActivity extends Activity implements SensorEventListener{
 			}
 			
 			//code for paddle and ball collision
-			if(ballY+ballHeight >= yAxis-(paddle.getHeight())/3) {
+			if(ballY+ballHeight >= yAxis-(paddle.getHeight())/5) {
 				
 				if((ballX+ballWidth>x-paddle.getWidth()/2 && x>ballX) ||  (ballX<=x+paddle.getWidth()/2 && ballX>x)) {
 					collisionPoint=ballX-x;
@@ -153,26 +220,24 @@ public class GameActivity extends Activity implements SensorEventListener{
 						
 			while(isRunning){
 				
-				//update();
 				if(!ourHolder.getSurface().isValid())
 					continue;
 				Canvas canvas=ourHolder.lockCanvas();
-				//x=((screenW-paddle.getWidth())/2);
-				//sensorX*100
 				canvas.drawColor(Color.BLACK);
+				
+				//canvas.drawBitmap(brick, brickX, brickY, null);
 				int scrX=currentFrame*ballWidth;
 				int scrY=0;
 				Rect scr=new Rect(scrX,scrY,scrX+ballWidth,scrY+ballHeight);
 				Rect dest=new Rect(ballX,ballY,ballX+ballWidth,ballY+ballHeight);
 				canvas.drawBitmap(ball,scr, dest, null);
-				int deltaX=xLast-xAxis;//Math.abs(xLast-xAxis);
-				if(deltaX>NOISE){
+				//int deltaX=xLast-xAxis;//Math.abs(xLast-xAxis);
+				//if(deltaX>NOISE){
 					canvas.drawBitmap(paddle,xAxis, yAxis, null);
-				}else{
-					canvas.drawBitmap(paddle,xLast, yAxis, null);
-				}
-				update();
-				xLast=xAxis;
+				//}else{
+				//	canvas.drawBitmap(paddle,xLast, yAxis, null);
+				//}
+				update(canvas);
 				ourHolder.unlockCanvasAndPost(canvas);
 			}						
 		}
